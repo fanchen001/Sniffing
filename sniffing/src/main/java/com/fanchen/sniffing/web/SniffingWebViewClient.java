@@ -73,9 +73,14 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
             String http = html.substring(0, end + 5);
             int start = http.lastIndexOf("http");
             String m3u8 = http.substring(start, end + 5);
-            if (m3u8.contains(";") || m3u8.contains(",") || m3u8.contains("\"") || m3u8.contains("'") ||  m3u8.contains("=")) {
+            if (m3u8.contains(";") || m3u8.contains(",") || m3u8.contains("\"") || m3u8.contains("'") ) {
                 parserNode(webView, url, new Node(html));
-            } else {
+            } else if(m3u8.contains("=")){
+                LogUtil.e("SniffingUtil", "onSuccess(containsType)  --> " + url);
+                mVideos.add(new SniffingVideo(m3u8.split("=")[1], ".m3u8"));
+                this.onSniffingSuccess(webView, url, mVideos);
+                this.onSniffingFinish(webView, url);
+            }else{
                 LogUtil.e("SniffingUtil", "onSuccess(containsType)  --> " + url);
                 mVideos.add(new SniffingVideo(m3u8, ".m3u8"));
                 this.onSniffingSuccess(webView, url, mVideos);
@@ -86,9 +91,14 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
             String http = html.substring(0, end + 4);
             int start = http.lastIndexOf("mp4");
             String mp4 = http.substring(start, end + 4);
-            if (mp4.contains(";") || mp4.contains(",") || mp4.contains("\"") || mp4.contains("'") ||  mp4.contains("=")) {
+            if (mp4.contains(";") || mp4.contains(",") || mp4.contains("\"") || mp4.contains("'") ) {
                 parserNode(webView, url, new Node(html));
-            } else {
+            } else if(mp4.contains("=")){
+                LogUtil.e("SniffingUtil", "onSuccess(containsType)  --> " + url);
+                mVideos.add(new SniffingVideo(mp4.split("=")[1], ".mp4"));
+                this.onSniffingSuccess(webView, url, mVideos);
+                this.onSniffingFinish(webView, url);
+            }else{
                 LogUtil.e("SniffingUtil", "onSuccess(containsType)  --> " + url);
                 mVideos.add(new SniffingVideo(mp4, ".mp4"));
                 this.onSniffingSuccess(webView, url, mVideos);
