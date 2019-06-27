@@ -4,7 +4,7 @@
 基本使用方法请参照[TestActivity](https://github.com/fanchen001/Sniffing/blob/master/app/src/main/java/com/fanchen/sniffingtest/TestActivity.java)或次元番
 
 
-#添加依赖
+# 添加依赖
 Add it in your root build.gradle at the end of repositories:
 
 	allprojects {
