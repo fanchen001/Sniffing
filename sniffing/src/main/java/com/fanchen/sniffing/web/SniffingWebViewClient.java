@@ -54,6 +54,7 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
     private ParserHtmlRunnable mJSRunnable = null;
     private long mConnTimeOut = 20 * 1000;
     private long mReadTimeOut = 45 * 1000;
+    private long mFinishedTimeOut = 800;
     private WebView mWebView;
     private String mURL;
 
@@ -177,6 +178,10 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
         this.mConnTimeOut = connTimeOut;
     }
 
+    public void setFinishedTimeOut(long mFinishedTimeOut) {
+        this.mFinishedTimeOut = mFinishedTimeOut;
+    }
+
     public void setReadTimeOut(long readTimeOut) {
         this.mReadTimeOut = readTimeOut;
     }
@@ -201,13 +206,20 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
     @Override
     public void onPageFinished(WebView view, String url) {
         mLastEndTime = System.currentTimeMillis();
-        mH.postDelayed(mFinished = new FinishedRunnable(view, url), 500);
+        mH.postDelayed(mFinished = new FinishedRunnable(view, url), mFinishedTimeOut);
     }
 
     @Override
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         try {
             LogUtil.e("SniffingUtil", "shouldInterceptRequest(URL)  --> " + url);
+            if(!url.contains(".")){
+                Object[] content = Util.getContent(url);
+                String s = content[1].toString();
+                if((int) content[0] != -1 && (s.toLowerCase().contains("video") || s.toLowerCase().contains("mpegurl"))){
+                    mVideos.add(new SniffingVideo(url,"m3u8",(int) content[0],"m3u8"));
+                }
+            }
             if (mFilter != null) {
                 SniffingVideo video = mFilter.onFilter(view, url);
                 if (video != null) mVideos.add(video);
@@ -404,12 +416,12 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
         public void run() {
             try {
                 Object[] content = Util.getContent(url);
-                String contentType = content[1].toString();
+                Object contentType = content[1];
                 if (contentType == null) {
                     LogUtil.e("SniffingUtil", "onError(contentType == null)  --> " + url);
                     SniffingWebViewClient.this.onSniffingError(view, url, CONTENT_ERROR);
                     SniffingWebViewClient.this.onSniffingFinish(view, url);
-                } else if (contentType.contains("html")) {
+                } else if (contentType.toString().contains("html")) {
                     LogUtil.e("SniffingUtil", "RELOAD()  --> " + url);
                     if (mConnTimeout != null) {
                         mH.removeCallbacks(mConnTimeout);
@@ -417,9 +429,9 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
                     mH.postDelayed(mConnTimeout = new TimeOutRunnable(view, url, TYPE_CONN), mConnTimeOut);
                     mHeader.put("Referer", mWebView.getUrl());
                     mWebView.loadUrl(Util.warpUrl(mURL, url), mHeader);
-                } else if (contentType.contains("video") || contentType.contains("mpegurl")) {
+                } else if (contentType.toString().contains("video") || contentType.toString().contains("mpegurl")) {
                     LogUtil.e("SniffingUtil", "onSuccess(mpegurl video)  --> " + url);
-                    mVideos.add(new SniffingVideo(url, type, (int) content[0], contentType));
+                    mVideos.add(new SniffingVideo(url, type, (int) content[0], contentType.toString()));
                     SniffingWebViewClient.this.onSniffingSuccess(view, url, mVideos);
                     SniffingWebViewClient.this.onSniffingFinish(view, url);
                 }

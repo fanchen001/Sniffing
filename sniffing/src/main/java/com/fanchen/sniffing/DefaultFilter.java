@@ -17,7 +17,7 @@ public class DefaultFilter implements SniffingFilter {
                 Object[] content = Util.getContent(url);
                 int len = (int) content[0];
                 String ctp = (String) content[1];
-                if(ctp.contains("video") || ctp.contains("mpegurl")){
+                if(ctp.toLowerCase().contains("video") || ctp.toLowerCase().contains("mpegurl")){
                     return new SniffingVideo(url, type, len, ctp);
                 }
             }

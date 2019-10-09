@@ -5,8 +5,11 @@ import android.text.TextUtils;
 import com.fanchen.sniffing.node.Node;
 import com.tencent.smtt.sdk.WebView;
 
+import javax.net.ssl.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 
 public class Util {
 
@@ -17,11 +20,24 @@ public class Util {
         HttpURLConnection urlConnection = null;
         try {
             urlConnection = (HttpURLConnection) new URL(url).openConnection();
-            urlConnection.setRequestMethod("HEAD");
-            objects[0] = urlConnection.getContentLength();
-            objects[1] = urlConnection.getContentType();
+            if (url.startsWith("https")) {
+                HttpsURLConnection https = (HttpsURLConnection) urlConnection;
+                // 方式一，相信所有
+                trustAllHosts(https);
+                // 方式二，覆盖默认验证方法
+                https.getHostnameVerifier();
+                // 方式三，不校验
+                https.setHostnameVerifier(DO_NOT_VERIFY);
+            }
+            urlConnection.setRequestMethod("GET");
+            int responseCode = urlConnection.getResponseCode();
+            if(responseCode == 200){
+                objects[0] = urlConnection.getContentLength();
+                objects[1] = urlConnection.getContentType();
+            }
+            LogUtil.e("SniffingUtil","getContent code = " + responseCode);
         } catch (Exception e) {
-            e.printStackTrace();
+            LogUtil.e("SniffingUtil","getContent error = " + e.toString());
         } finally {
             if (urlConnection != null) {
                 urlConnection.disconnect();
@@ -116,5 +132,50 @@ public class Util {
         String newJs = "javascript:" + js + "(document.getElementsByTagName('html')[0].innerHTML + '" + HTMLFLAG + "');";
         view.loadUrl(newJs);
     }
+
+    /**
+     * 覆盖java默认的证书验证
+     */
+    private static final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+        public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+            return new java.security.cert.X509Certificate[]{};
+        }
+
+        public void checkClientTrusted(X509Certificate[] chain, String authType)
+                throws CertificateException {
+        }
+
+        public void checkServerTrusted(X509Certificate[] chain, String authType)
+                throws CertificateException {
+        }
+    }};
+
+    /**
+     * 设置不验证主机
+     */
+    private static final HostnameVerifier DO_NOT_VERIFY = new HostnameVerifier() {
+        public boolean verify(String hostname, SSLSession session) {
+            return true;
+        }
+    };
+
+    /**
+     * 信任所有
+     * @param connection
+     * @return
+     */
+    private static SSLSocketFactory trustAllHosts(HttpsURLConnection connection) {
+        SSLSocketFactory oldFactory = connection.getSSLSocketFactory();
+        try {
+            SSLContext sc = SSLContext.getInstance("TLS");
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            SSLSocketFactory newFactory = sc.getSocketFactory();
+            connection.setSSLSocketFactory(newFactory);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return oldFactory;
+    }
+
 
 }

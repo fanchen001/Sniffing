@@ -1,6 +1,7 @@
 package com.fanchen.sniffing.web;
 
 import android.app.Activity;
+import android.view.Display;
 import android.view.ViewGroup;
 import android.webkit.WebView;
 
@@ -15,7 +16,7 @@ import java.util.Map;
 public class SniffingUtil {
 
     private static SniffingUtil mSniffingUtil;
-
+    public static boolean WEB_VIEW_DEBUG = false;
     private WebView mWebView;
 
     private String mUrl;
@@ -26,6 +27,7 @@ public class SniffingUtil {
     private SniffingFilter mFilter = new DefaultFilter();
     private long mConnTimeOut = 20 * 1000;
     private long mReadTimeOut = 45 * 1000;
+    private long mFinishedTimeOut = 800;
     private SniffingWebViewClient mClient = null;
 
     private SniffingUtil() {
@@ -40,6 +42,11 @@ public class SniffingUtil {
             }
         }
         return mSniffingUtil;
+    }
+
+    public synchronized SniffingUtil setFinishedTimeOut(long mFinishedTimeOut) {
+        this.mFinishedTimeOut = mFinishedTimeOut;
+        return this;
     }
 
     public synchronized void releaseWebView() {
@@ -99,6 +106,7 @@ public class SniffingUtil {
                 mClient = new SniffingWebViewClient(mWebView, mUrl, mHeader, mFilter, mCallback);
                 mClient.setReadTimeOut(mReadTimeOut);
                 mClient.setConnTimeOut(mConnTimeOut);
+                mClient.setFinishedTimeOut(mFinishedTimeOut);
                 SniffingWebChromeClient chromeClient = new SniffingWebChromeClient(mClient);
                 mWebView.setWebViewClient(mClient);
                 mWebView.setWebChromeClient(chromeClient);
@@ -106,7 +114,12 @@ public class SniffingUtil {
             if (mWebView != null && activity != null) {
                 if (mWebView.getParent() == null) {
                     ViewGroup mainView = (ViewGroup) activity.findViewById(android.R.id.content);
-                    mWebView.setLayoutParams(new ViewGroup.LayoutParams(1, 1));
+                    if(WEB_VIEW_DEBUG){
+                        Display display = activity.getWindowManager().getDefaultDisplay();
+                        mWebView.setLayoutParams(new ViewGroup.LayoutParams(display.getWidth() / 2, display.getHeight() / 2));
+                    }else{
+                        mWebView.setLayoutParams(new ViewGroup.LayoutParams(1, 1));
+                    }
                     mainView.addView(mWebView);
                 }
                 mWebView.loadUrl(mUrl, mHeader);
