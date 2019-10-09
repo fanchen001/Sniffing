@@ -29,7 +29,7 @@ public class Util {
                 // 方式三，不校验
                 https.setHostnameVerifier(DO_NOT_VERIFY);
             }
-            urlConnection.setRequestMethod("GET");
+            urlConnection.setRequestMethod("HEAD");
             int responseCode = urlConnection.getResponseCode();
             if(responseCode == 200){
                 objects[0] = urlConnection.getContentLength();

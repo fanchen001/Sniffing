@@ -19,5 +19,7 @@ android {
 
 dependencies {
     api fileTree(dir: 'libs', include: ['*.jar'])
+//    compile 'com.github.fanchen001:Sniffing:1.0.1'
+
     api project(path: ':sniffing')
 }

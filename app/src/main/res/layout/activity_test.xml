@@ -10,7 +10,7 @@
             android:inputType="textPersonName"
             android:hint="请输入视频网页地址"
             android:ems="10"
-            android:text="https://www.kankan001.com/play/22711-0-0.html"
+            android:text="@string/aaaa"
             android:id="@+id/editText"/>
 
     <Button

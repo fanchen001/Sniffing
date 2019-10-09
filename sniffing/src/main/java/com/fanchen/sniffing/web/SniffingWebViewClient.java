@@ -213,14 +213,13 @@ public class SniffingWebViewClient extends WebViewClient implements SniffingUICa
     public WebResourceResponse shouldInterceptRequest(WebView view, String url) {
         try {
             LogUtil.e("SniffingUtil", "shouldInterceptRequest(URL)  --> " + url);
-            if(!url.contains(".")){
+            if(url.lastIndexOf(".") < url.length() - 5){
                 Object[] content = Util.getContent(url);
                 String s = content[1].toString();
-                if((int) content[0] != -1 && (s.toLowerCase().contains("video") || s.toLowerCase().contains("mpegurl"))){
+                if(s.toLowerCase().contains("video") || s.toLowerCase().contains("mpegurl")){
                     mVideos.add(new SniffingVideo(url,"m3u8",(int) content[0],"m3u8"));
                 }
-            }
-            if (mFilter != null) {
+            }else if (mFilter != null) {
                 SniffingVideo video = mFilter.onFilter(view, url);
                 if (video != null) mVideos.add(video);
             }
